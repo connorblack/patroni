@@ -30,6 +30,13 @@ postgresql:
       password: '${PATRONI_SUPERUSER_PASSWORD}'
     replication:
       password: '${PATRONI_REPLICATION_PASSWORD}'
+kubernetes:
+  namespace: ${KUBERNETES_NAMESPACE}
+  labels:
+    application: ${APPLICATION_NAME}
+    cluster-name: ${CLUSTER_NAME}
+  scope: ${CLUSTER_NAME}
+  use_endpoints: true
 __EOF__
 
 unset PATRONI_SUPERUSER_PASSWORD PATRONI_REPLICATION_PASSWORD
