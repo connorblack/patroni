@@ -12,15 +12,15 @@ fi
 
 kubectl delete -f citus_k8s.yaml --ignore-not-found
 
-docker buildx build --builder=cloud-connorblack-default -f Dockerfile.citus -t connorblack/patroni-citus-k8s --platform=linux/amd64,linux/arm64 --push .
+docker buildx build --builder=cloud-connorblack-default -f Dockerfile.citus.dev -t connorblack/patroni-citus-k8s --platform=linux/amd64,linux/arm64 --push .
 
 # kubectl create secret docker-registry docker-regcred \
 #   --docker-server=docker.pkg.github.com \
 #   --docker-username=connorblack \
 #   --docker-password="$DOCKER_PASSWORD"
 
-kubectl apply -f citus_k8s.yaml --wait
+kubectl apply -f citus_k8s.yaml
 
 # Port forward to allow local connections
-kubectl port-forward pod/citusdemo-0-0 5432:5432 &
+# kubectl port-forward pod/citusdemo-0-0 5432:5432 &
 echo "Port forwarding started. You can now connect to the database on localhost:5432"

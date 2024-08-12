@@ -61,7 +61,7 @@ spec:
       containers:
         - name: *cluster_name
           image: connorblack/patroni-citus-k8s:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
 
           readinessProbe:
             httpGet:
@@ -125,9 +125,9 @@ spec:
             - name: PATRONI_POSTGRESQL_PGPASS
               value: /tmp/pgpass
             - name: PATRONI_POSTGRESQL_LISTEN
-              value: "0.0.0.0:5432"
+              value: "*:5432"
             - name: PATRONI_RESTAPI_LISTEN
-              value: "0.0.0.0:8008"
+              value: "*:8008"
 
       terminationGracePeriodSeconds: 0
       volumes:
@@ -175,7 +175,7 @@ spec:
       containers:
         - name: *cluster_name
           image: connorblack/patroni-citus-k8s:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           readinessProbe:
             httpGet:
               scheme: HTTP
@@ -238,9 +238,9 @@ spec:
             - name: PATRONI_POSTGRESQL_PGPASS
               value: /tmp/pgpass
             - name: PATRONI_POSTGRESQL_LISTEN
-              value: "0.0.0.0:5432"
+              value: "*:5432"
             - name: PATRONI_RESTAPI_LISTEN
-              value: "0.0.0.0:8008"
+              value: "*:8008"
       terminationGracePeriodSeconds: 0
       volumes:
         - name: pgdata
@@ -287,7 +287,7 @@ spec:
       containers:
         - name: *cluster_name
           image: connorblack/patroni-citus-k8s:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           readinessProbe:
             httpGet:
               scheme: HTTP
@@ -350,9 +350,9 @@ spec:
             - name: PATRONI_POSTGRESQL_PGPASS
               value: /tmp/pgpass
             - name: PATRONI_POSTGRESQL_LISTEN
-              value: "0.0.0.0:5432"
+              value: "*:5432"
             - name: PATRONI_RESTAPI_LISTEN
-              value: "0.0.0.0:8008"
+              value: "*:8008"
       terminationGracePeriodSeconds: 0
       volumes:
         - name: pgdata
@@ -595,3 +595,23 @@ subjects:
     # The namespace must be specified explicitly.
     # If deploying to the different namespace you have to change it.
     namespace: default
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: citusdemo-external
+  labels:
+    application: patroni
+    cluster-name: citusdemo
+spec:
+  type: NodePort
+  ports:
+    - port: 5432
+      targetPort: 5432
+      nodePort: 30007 # You can choose any available port in the range 30000-32767
+  selector:
+    application: patroni
+    cluster-name: citusdemo
+    citus-group: "0"
+    citus-type: coordinator
