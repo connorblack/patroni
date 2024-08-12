@@ -615,3 +615,30 @@ spec:
     cluster-name: citusdemo
     citus-group: "0"
     citus-type: coordinator
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: citus-shared-pv
+spec:
+  capacity:
+    storage: 2Ti
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: /Volumes/1M2
+    server: 100.71.31.74
+  persistentVolumeReclaimPolicy: Retain
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: citus-shared-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 100Gi

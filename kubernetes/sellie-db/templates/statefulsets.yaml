@@ -1,0 +1,107 @@
+{{- range $i, $e := until 3 }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ $.Values.clusterName }}-{{ $i }}
+  labels:
+    application: {{ $.Values.application }}
+    cluster-name: {{ $.Values.clusterName }}
+    citus-group: "{{ $i }}"
+    citus-type: {{ if eq $i 0 }}coordinator{{ else }}worker{{ end }}
+spec:
+  replicas: {{ if eq $i 0 }}3{{ else }}2{{ end }}
+  serviceName: {{ $.Values.clusterName }}-{{ $i }}
+  selector:
+    matchLabels:
+      application: {{ $.Values.application }}
+      cluster-name: {{ $.Values.clusterName }}
+      citus-group: "{{ $i }}"
+      citus-type: {{ if eq $i 0 }}coordinator{{ else }}worker{{ end }}
+  template:
+    metadata:
+      labels:
+        application: {{ $.Values.application }}
+        cluster-name: {{ $.Values.clusterName }}
+        citus-group: "{{ $i }}"
+        citus-type: {{ if eq $i 0 }}coordinator{{ else }}worker{{ end }}
+    spec:
+      serviceAccountName: {{ $.Values.clusterName }}
+      imagePullSecrets:
+        - name: {{ (index $.Values.imagePullSecrets 0).name }}
+      volumes:
+        - name: {{ $.Values.postgresqlVolumeMountName }}
+          persistentVolumeClaim:
+            claimName: {{ $.Values.pvc.name }}
+      containers:
+        - name: {{ $.Values.clusterName }}-{{ $i }}
+          image: {{ $.Values.image.repository }}:{{ $.Values.image.tag }}
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          volumeMounts:
+            - mountPath: {{ $.Values.postgresqlVolumeMountPath }}
+              name: {{ $.Values.postgresqlVolumeMountName }}
+          readinessProbe:
+            httpGet:
+              scheme: HTTP
+              path: /readiness
+              port: {{ $.Values.containerHttpPort }}
+            initialDelaySeconds: 3
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          ports:
+            - containerPort: {{ $.Values.containerHttpPort }}
+              protocol: TCP
+            - containerPort: {{ $.Values.containerPostgresPort }}
+              protocol: TCP
+          env:
+            - name: PATRONI_KUBERNETES_POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: PATRONI_KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: PATRONI_KUBERNETES_BYPASS_API_SERVICE
+              value: "true"
+            - name: PATRONI_KUBERNETES_USE_ENDPOINTS
+              value: "true"
+            - name: PATRONI_KUBERNETES_LABELS
+              value: "{application: {{ $.Values.application }}, cluster-name: {{ $.Values.clusterName }}}"
+            - name: PATRONI_CITUS_DATABASE
+              value: {{ $.Values.citusDatabase }}
+            - name: PATRONI_CITUS_GROUP
+              value: "{{ $i }}"
+            - name: PATRONI_SUPERUSER_USERNAME
+              value: {{ $.Values.superuserUsername }}
+            - name: PATRONI_SUPERUSER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.clusterName }}-secrets
+                  key: {{ $.Values.superuserPasswordKey }}
+            - name: PATRONI_REPLICATION_USERNAME
+              value: {{ $.Values.replicationUsername }}
+            - name: PATRONI_REPLICATION_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.clusterName }}-secrets
+                  key: {{ $.Values.replicationPasswordKey }}
+            - name: PATRONI_SCOPE
+              value: {{ $.Values.clusterName }}
+            - name: PATRONI_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: PATRONI_POSTGRESQL_DATA_DIR
+              value: {{ $.Values.postgresqlDataDir }}
+            - name: PATRONI_POSTGRESQL_PGPASS
+              value: {{ $.Values.postgresqlPgpass }}
+            - name: PATRONI_POSTGRESQL_LISTEN
+              value: {{ $.Values.postgresqlListen | quote }}
+            - name: PATRONI_RESTAPI_LISTEN
+              value: {{ $.Values.restapiListen | quote }}
+      terminationGracePeriodSeconds: 0
+
+---
+{{- end }}

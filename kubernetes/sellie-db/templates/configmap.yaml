@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sellie-config
+data:
+  CLUSTER_NAME: {{ .Values.clusterName | quote }}
+  NFS_SERVER: {{ .Values.nfsServer | quote }}
+  NFS_PATH: {{ .Values.nfsPath | quote }}
+  APPLICATION: {{ .Values.application | quote }}
+  CONTAINER_IMAGE: {{ .Values.containerImage | quote }}
+  IMAGE_PULL_SECRET_KEY: {{ (index $.Values.imagePullSecrets 0).name | quote }}
+  CITUS_DATABASE: {{ .Values.citusDatabase | quote }}
+  SUPERUSER_USERNAME: {{ .Values.superuserUsername | quote }}
+  SUPERUSER_PASSWORD_KEY: {{ .Values.superuserPasswordKey | quote }}
+  REPLICATION_USERNAME: {{ .Values.replicationUsername | quote }}
+  REPLICATION_PASSWORD_KEY: {{ .Values.replicationPasswordKey | quote }}
+  POSTGRESQL_DATA_DIR: {{ .Values.postgresqlDataDir | quote }}
+  POSTGRESQL_PGPASS: {{ .Values.postgresqlPgpass | quote }}
+  POSTGRESQL_LISTEN: {{ .Values.postgresqlListen | quote }}
+  RESTAPI_LISTEN: {{ .Values.restapiListen | quote }}

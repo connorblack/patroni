@@ -71,3 +71,5 @@ data/
 # macOS
 **/.DS_Store
 kubernetes/.env
+node_modules/
+*.tgz
